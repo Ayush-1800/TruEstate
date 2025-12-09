@@ -5,7 +5,7 @@ const unzipper = require("unzipper");
 // NOTE: Render allows writing only in /tmp directory
 const EXTRACT_DIR = "/tmp/truestate-data";
 const ZIP_PATH = path.join(__dirname, "data.zip");
-const DATA_JSON = path.join(EXTRACT_DIR, "data.json");
+const DATA_JSON = path.join(EXTRACT_DIR, "sales_dataset.json");
 
 async function ensureDatasetLoaded() {
     try {
