@@ -2,54 +2,44 @@ const fs = require("fs");
 const path = require("path");
 const unzipper = require("unzipper");
 
-const ZIP_PATH = path.join(__dirname, "..", "src", "data.zip");
-const DATA_DIR = path.join(__dirname, "..", "src", "data");
-const JSON_PATH = path.join(DATA_DIR, "sales_dataset.json"); // change to your file name
+// NOTE: Render allows writing only in /tmp directory
+const EXTRACT_DIR = "/tmp/truestate-data";
+const ZIP_PATH = path.join(__dirname, "data.zip");
+const DATA_JSON = path.join(EXTRACT_DIR, "data.json");
 
-let datasetCache = null;
+async function ensureDatasetLoaded() {
+    try {
+        // Check if already extracted
+        if (fs.existsSync(DATA_JSON)) {
+            console.log("Dataset already extracted.");
+            return JSON.parse(fs.readFileSync(DATA_JSON, "utf8"));
+        }
 
-async function extractZipIfNeeded() {
-  // If folder already exists AND JSON file exists → extraction not needed
-  if (fs.existsSync(JSON_PATH)) {
-    console.log("Dataset already extracted.");
-    return;
-  }
+        console.log("Extracting dataset ZIP...");
 
-  console.log("Extracting dataset ZIP...");
+        // Create extract directory if not exists
+        if (!fs.existsSync(EXTRACT_DIR)) {
+            fs.mkdirSync(EXTRACT_DIR, { recursive: true });
+        }
 
-  await fs.promises.mkdir(DATA_DIR, { recursive: true });
+        // Unzip file into /tmp
+        await fs.createReadStream(ZIP_PATH)
+            .pipe(unzipper.Extract({ path: EXTRACT_DIR }))
+            .promise();
 
-  return new Promise((resolve, reject) => {
-    fs.createReadStream(ZIP_PATH)
-      .pipe(unzipper.Extract({ path: DATA_DIR }))
-      .on("close", () => {
-        console.log("Dataset extracted successfully.");
-        resolve();
-      })
-      .on("error", (err) => {
-        console.error("Unzip error:", err);
-        reject(err);
-      });
-  });
+        console.log("Extraction completed.");
+
+        if (!fs.existsSync(DATA_JSON)) {
+            console.error("❌ ERROR: data.json not found inside ZIP!");
+            return null;
+        }
+
+        return JSON.parse(fs.readFileSync(DATA_JSON, "utf8"));
+
+    } catch (err) {
+        console.error("Error loading dataset:", err);
+        return null;
+    }
 }
 
-async function loadDataset() {
-  if (datasetCache) return datasetCache;
-
-  await extractZipIfNeeded();
-
-  if (!fs.existsSync(JSON_PATH)) {
-    throw new Error(`JSON file missing after extraction: ${JSON_PATH}`);
-  }
-
-  const raw = await fs.promises.readFile(JSON_PATH, "utf8");
-  datasetCache = JSON.parse(raw);
-
-  console.log("Dataset loaded. Records:", datasetCache.length);
-
-  return datasetCache;
-}
-
-module.exports = {
-  loadDataset,
-};
+module.exports = { ensureDatasetLoaded };
