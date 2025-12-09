@@ -30,7 +30,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Load dataset into memory (if dataset exists at backend/data/sales_dataset.json)
-loadDatasetIfExists(path.join(__dirname, '..','src', 'data', 'sales_dataset.json'))
+loadDatasetIfExists(path.join(__dirname, '..','src', 'data.zip', 'sales_dataset.json'))
   .then((dataCount) => {
     console.log(`Dataset loaded. Records: ${dataCount}`);
   })
