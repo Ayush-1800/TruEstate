@@ -2,57 +2,31 @@ const fs = require("fs");
 const path = require("path");
 const AdmZip = require("adm-zip");
 
-let DATA = [];
+async function loadDatasetIfExists(zipPath) {
+  try {
+    const extractedFolder = path.join(__dirname, "..", "data_unzipped");
 
-/**
- * Load dataset from ZIP → extract → JSON
- */
-async function loadDatasetIfExists(zipPath, jsonPath) {
-  return new Promise((resolve, reject) => {
-    console.log("🔍 Checking dataset paths:");
-    console.log("ZIP Path:", zipPath);
-    console.log("JSON Path:", jsonPath);
-
-    try {
-      // If JSON already exists
-      if (fs.existsSync(jsonPath)) {
-        console.log("📄 Found existing JSON. Loading...");
-        const raw = fs.readFileSync(jsonPath);
-        DATA = JSON.parse(raw);
-        return resolve(DATA.length);
-      }
-
-      // ZIP not found
-      if (!fs.existsSync(zipPath)) {
-        return reject(new Error("❌ data.zip NOT FOUND on Render instance."));
-      }
-
-      console.log("📦 Extracting data.zip...");
+    if (!fs.existsSync(extractedFolder)) {
+      console.log("Extracting ZIP...");
       const zip = new AdmZip(zipPath);
-      zip.extractAllTo(path.dirname(jsonPath), true);
-
-      // After extract, check JSON again
-      if (!fs.existsSync(jsonPath)) {
-        console.log("❌ JSON missing even after extraction!");
-        console.log("📁 Files present in data folder:", fs.readdirSync(path.dirname(jsonPath)));
-        return reject(new Error("sales_dataset.json missing after extraction"));
-      }
-
-      // Load extracted JSON
-      const raw = fs.readFileSync(jsonPath);
-      DATA = JSON.parse(raw);
-      console.log("✅ JSON extracted & loaded.");
-
-      resolve(DATA.length);
-
-    } catch (err) {
-      reject(err);
+      zip.extractAllTo(extractedFolder, true);
     }
-  });
+
+    const jsonFile = path.join(extractedFolder, "sales_dataset.json");
+
+    if (!fs.existsSync(jsonFile)) {
+      console.log("JSON file not found inside ZIP.");
+      return 0;
+    }
+
+    const data = JSON.parse(fs.readFileSync(jsonFile, "utf8"));
+    global.salesData = data;
+
+    return data.length;
+  } catch (e) {
+    console.error("Error loading dataset:", e);
+    return 0;
+  }
 }
 
-function getData() {
-  return DATA;
-}
-
-module.exports = { loadDatasetIfExists, getData };
+module.exports = { loadDatasetIfExists };
