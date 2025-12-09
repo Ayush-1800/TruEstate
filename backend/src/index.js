@@ -32,8 +32,8 @@ app.use(express.json());
 // __dirname = backend/src/
 
 const DATASET_DIR = path.join(__dirname, "data");
-const ZIP_PATH = path.join(DATASET_DIR, "data.zip");
-const JSON_PATH = path.join(DATASET_DIR, "sales_dataset.json");
+const DATASET_ZIP = path.join(__dirname, "data", "data.zip");
+const DATASET_JSON = path.join(__dirname, "data", "sales_dataset.json");
 
 /* ---------------------------------------------------------
    LOAD DATASET (ZIP → extract → JSON)
