@@ -2,6 +2,7 @@
   "name": "truestate-backend",
   "version": "1.0.0",
   "description": "TruEstate SDE Intern Assignment - Backend",
+  "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -13,10 +14,16 @@
     "csv-parser": "^3.2.0",
     "dotenv": "^16.0.0",
     "express": "^4.18.2",
-    "joi": "^17.9.2"
+    "joi": "^17.9.2",
+    "unzipper": "^0.10.11",      
+    "fs-extra": "^11.2.0"       
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=20.x",
+    "npm": ">=10.x"
   },
   "author": "You",
   "license": "MIT"
