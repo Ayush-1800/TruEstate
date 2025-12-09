@@ -1,41 +1,44 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
 
-const salesRoutes = require('./routes/salesRoutes');
-const summaryRoutes = require('./routes/summaryRoutes');
+// Routes
+const salesRoutes = require("./routes/salesRoutes");
+const summaryRoutes = require("./routes/summaryRoutes");
 
-// Updated loader – now handles ZIP extraction
-const { loadDatasetIfExists } = require('./utils/loader');
+// ZIP + JSON loader
+const { loadDatasetIfExists } = require("./utils/loader");
 
 const PORT = process.env.PORT || 4000;
-
 const app = express();
 
-/* -----------------------------
-      CORS (Simple + Safe)
---------------------------------*/
+/* ---------------------------------------------------------
+   CORS (Simple and Render-Safe)
+---------------------------------------------------------- */
 app.use(
   cors({
-    origin: "*",        // Render-compatible
+    origin: "*",
     methods: "GET,POST",
-    allowedHeaders: "Content-Type"
+    allowedHeaders: "Content-Type",
   })
 );
 
 app.use(express.json());
 
-/* -------------------------------------------------------
-   LOAD DATASET FROM ZIP OR JSON (Render compatible)
-   Render extracts your ZIP into:
-   backend/src/data/data.zip
---------------------------------------------------------*/
+/* ---------------------------------------------------------
+   PATHS FOR ZIP & JSON  (Render-Compatible)
+---------------------------------------------------------- */
+// __dirname = backend/src/
 
-const DATASET_ZIP = path.join(__dirname, "data", "data.zip");
-const DATASET_JSON = path.join(__dirname, "data", "sales_dataset.json");
+const DATASET_DIR = path.join(__dirname, "data");
+const ZIP_PATH = path.join(DATASET_DIR, "data.zip");
+const JSON_PATH = path.join(DATASET_DIR, "sales_dataset.json");
 
-loadDatasetIfExists(DATASET_ZIP, DATASET_JSON)
+/* ---------------------------------------------------------
+   LOAD DATASET (ZIP → extract → JSON)
+---------------------------------------------------------- */
+loadDatasetIfExists(ZIP_PATH, JSON_PATH)
   .then((count) => {
     console.log(`📦 Dataset loaded successfully. Records: ${count}`);
   })
@@ -43,28 +46,28 @@ loadDatasetIfExists(DATASET_ZIP, DATASET_JSON)
     console.warn("⚠️ Dataset NOT loaded:", err.message);
   });
 
-/* -----------------------------
-            ROUTES
---------------------------------*/
-app.use('/api/sales', salesRoutes);
-app.use('/api/summary', summaryRoutes);
+/* ---------------------------------------------------------
+   ROUTES
+---------------------------------------------------------- */
+app.use("/api/sales", salesRoutes);
+app.use("/api/summary", summaryRoutes);
 
-/* -----------------------------
-            HEALTH
---------------------------------*/
-app.get('/health', (req, res) => res.json({ status: "ok" }));
+/* ---------------------------------------------------------
+   HEALTH CHECK
+---------------------------------------------------------- */
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 
-/* -----------------------------
-      GLOBAL ERROR HANDLER
---------------------------------*/
+/* ---------------------------------------------------------
+   GLOBAL ERROR HANDLER
+---------------------------------------------------------- */
 app.use((err, req, res, next) => {
   console.error("❌ ERROR:", err);
   res.status(err.status || 500).json({ error: err.message });
 });
 
-/* -----------------------------
-          START SERVER
---------------------------------*/
+/* ---------------------------------------------------------
+   START SERVER
+---------------------------------------------------------- */
 app.listen(PORT, () => {
   console.log(`🚀 TruEstate backend running on port ${PORT}`);
 });
