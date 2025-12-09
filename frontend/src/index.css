@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* small custom styles to emulate Figma spacing */
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+.sidebar-bg {
+  background: linear-gradient(180deg,#0f172a,#0b1220);
+}
+.card {
+  @apply bg-white rounded-lg shadow-sm p-4;
+}
+.table-header {
+  @apply text-sm font-medium text-gray-500;
+}
+.table-cell {
+  @apply text-sm text-gray-700 py-2 px-3;
+}
+.chips {
+  @apply inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs;
+}
+/* simple card */
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(13,17,22,0.04);
+}
