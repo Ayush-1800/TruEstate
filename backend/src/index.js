@@ -5,54 +5,66 @@ const path = require('path');
 
 const salesRoutes = require('./routes/salesRoutes');
 const summaryRoutes = require('./routes/summaryRoutes');
+
+// Updated loader – now handles ZIP extraction
 const { loadDatasetIfExists } = require('./utils/loader');
 
 const PORT = process.env.PORT || 4000;
 
 const app = express();
 
-// Configure CORS via environment variable `CORS_ORIGIN`.
-// Provide a comma-separated list of allowed origins. If not set, allow all origins (suitable for local/dev).
-const corsOrigins = process.env.CORS_ORIGIN;
-let corsOptions = {};
-if (corsOrigins) {
-  const allowed = corsOrigins.split(',').map((s) => s.trim());
-  corsOptions = {
-    origin: (origin, callback) => {
-      // allow requests with no origin (like curl, mobile clients)
-      if (!origin) return callback(null, true);
-      if (allowed.includes(origin)) return callback(null, true);
-      return callback(new Error('CORS not allowed'), false);
-    }
-  };
-}
-app.use(cors(corsOptions));
+/* -----------------------------
+      CORS (Simple + Safe)
+--------------------------------*/
+app.use(
+  cors({
+    origin: "*",        // Render-compatible
+    methods: "GET,POST",
+    allowedHeaders: "Content-Type"
+  })
+);
+
 app.use(express.json());
 
-// Load dataset into memory (if dataset exists at backend/data/sales_dataset.json)
-loadDatasetIfExists(path.join(__dirname, '..','src', 'data', 'sales_dataset.json'))
-  .then((dataCount) => {
-    console.log(`Dataset loaded. Records: ${dataCount}`);
+/* -------------------------------------------------------
+   LOAD DATASET FROM ZIP OR JSON (Render compatible)
+   Render extracts your ZIP into:
+   backend/src/data/data.zip
+--------------------------------------------------------*/
+
+const DATASET_ZIP = path.join(__dirname, "data", "data.zip");
+const DATASET_JSON = path.join(__dirname, "data", "sales_dataset.json");
+
+loadDatasetIfExists(DATASET_ZIP, DATASET_JSON)
+  .then((count) => {
+    console.log(`📦 Dataset loaded successfully. Records: ${count}`);
   })
   .catch((err) => {
-    console.warn('Dataset not loaded yet. Use scripts/load_dataset.js to generate dataset JSON from CSV.', err.message);
+    console.warn("⚠️ Dataset NOT loaded:", err.message);
   });
 
-// Routes
+/* -----------------------------
+            ROUTES
+--------------------------------*/
 app.use('/api/sales', salesRoutes);
 app.use('/api/summary', summaryRoutes);
 
+/* -----------------------------
+            HEALTH
+--------------------------------*/
+app.get('/health', (req, res) => res.json({ status: "ok" }));
 
-// Health
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
-
-// Generic error handler
+/* -----------------------------
+      GLOBAL ERROR HANDLER
+--------------------------------*/
 app.use((err, req, res, next) => {
-  console.error(err);
-  const status = err.status || 500;
-  res.status(status).json({ error: err.message || 'Internal Server Error' });
+  console.error("❌ ERROR:", err);
+  res.status(err.status || 500).json({ error: err.message });
 });
 
+/* -----------------------------
+          START SERVER
+--------------------------------*/
 app.listen(PORT, () => {
-  console.log(`TruEstate backend listening on port ${PORT}`);
+  console.log(`🚀 TruEstate backend running on port ${PORT}`);
 });
