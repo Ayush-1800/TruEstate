@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: truestate-backend
+    rootDir: backend
+    runtime: node
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      NODE_VERSION: 20
+
+  - type: web
+    name: truestate-frontend
+    rootDir: frontend
+    runtime: node
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run preview"
+    envVars:
+      NODE_VERSION: 20
